@@ -8,11 +8,11 @@ mod routes;
 use rocket::{serde::json::Json, serde::Serialize};
 use routes::*;
 
-#[rocket::main]
-async fn main() {
+#[launch]
+async fn rocket() -> _ {
     rocket::build()
         .attach(database::init().await)
-        .mount("/api/v1", routes![post_new_todo])
+        .mount("/api/v1", routes![post_new_todo, get_one_todo])
         .register(
             "/",
             catchers![
@@ -23,8 +23,6 @@ async fn main() {
                 internal_sever_error
             ],
         )
-        .launch()
-        .await;
 }
 
 #[derive(Debug, Serialize)]
