@@ -2,13 +2,13 @@ mod private;
 
 use crate::database::private::DB;
 use crate::model::Todo;
+use crate::TodoDBO;
 use mongodb::bson;
+use mongodb::bson::oid::ObjectId;
 use mongodb::options::ClientOptions;
 use mongodb::results::InsertOneResult;
 use mongodb::{Client, Database};
-use mongodb::bson::oid::ObjectId;
 use rocket::fairing::AdHoc;
-use crate::TodoReq;
 
 pub struct MongoDB {
     database: Database,
@@ -18,10 +18,10 @@ impl MongoDB {
     fn new(database: Database) -> Self {
         MongoDB { database }
     }
-    pub async fn add_todo(&self, todo: &mut TodoReq) -> mongodb::error::Result<String> {
+    pub async fn add_todo(&self, todo: &mut TodoDBO) -> mongodb::error::Result<String> {
         let temp = Todo {
             title: todo.title.clone(),
-            description: todo.description.clone()
+            description: todo.description.clone(),
         };
         let collection = self.database.collection::<Todo>("todo");
         let insert: InsertOneResult = collection.insert_one(temp, None).await?;
@@ -30,23 +30,24 @@ impl MongoDB {
 
     pub async fn get_one_todo(&self, id: ObjectId) -> mongodb::error::Result<Todo> {
         let collection = self.database.collection::<Todo>("todo");
-        Ok(collection.find_one(bson::doc! { "_id": id }, None).await?.unwrap())
+        Ok(collection
+            .find_one(bson::doc! { "_id": id }, None)
+            .await?
+            .unwrap())
     }
 
     /*    pub async fn get_todos(&self) -> mongodb::error::Result<Collection<Todo>> {
         let collection = self.database.collection::<Todo>("todo");
-        Ok(collection.drop(Todo))
-                Ok(collection.find(bson::doc! {}, None).await?.unwrap())
-
-    }
-
-
-
-    pub async fn delete_blog(&self, id: String) -> mongodb::error::Result<()> {
-        let collection = self.database.collection::<BlogEntry>("blogs");
-        collection.delete_one(doc! { "_id": id }, None).await?;
-        Ok(())
+        Ok(collection.find(bson::doc! {}, None).await?.unwrap())
     }*/
+
+    pub async fn delete_todo(&self, id: ObjectId) -> mongodb::error::Result<()> {
+        let collection = self.database.collection::<Todo>("todo");
+        collection
+            .delete_one(bson::doc! { "_id": id }, None)
+            .await?;
+        Ok(())
+    }
 }
 
 pub async fn init() -> AdHoc {

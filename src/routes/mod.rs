@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 #[post("/todo", data = "<form>", format = "json")]
 pub async fn post_new_todo(
-    mut form: Option<Json<TodoReq>>,
+    mut form: Option<Json<TodoDBO>>,
     database: &State<database::MongoDB>,
 ) -> Result<Status, Status> {
     return match form {
@@ -24,30 +24,62 @@ pub async fn post_new_todo(
 }
 
 #[get("/todo/<_id>")]
-pub async fn get_one_todo(_id: String,database: &State<database::MongoDB>) -> Result<Json<TodoResGetId>, Status> {
+pub async fn get_one_todo(
+    _id: String,
+    database: &State<database::MongoDB>,
+) -> Result<Json<TodoDBO>, Status> {
     let oid = ObjectId::parse_str(&_id);
     match oid {
-        Ok(id) => {
-            match database.get_one_todo(id).await {
-                Ok(todo) => {
-                    Ok(Json(TodoResGetId {
-                        title: todo.title,
-                        description: todo.description
-                    }))
-                },
-                Err(error) => {
-                    println!("{:?}", error);
-                    Err(Status::InternalServerError)
-                },
+        Ok(id) => match database.get_one_todo(id).await {
+            Ok(todo) => Ok(Json(TodoDBO {
+                title: todo.title,
+                description: todo.description,
+            })),
+            Err(error) => {
+                println!("{:?}", error);
+                Err(Status::InternalServerError)
             }
         },
-        Err(error)=> {
+        Err(error) => {
             println!("{}", error);
             Err(Status::NotFound)
         }
     }
-
 }
+#[delete("/todo/<_id>")]
+pub async fn delete_one_todo(
+    _id: String,
+    database: &State<database::MongoDB>,
+) -> Result<Status, Status> {
+    let oid = ObjectId::parse_str(&_id);
+    match oid {
+        Ok(id) => match database.delete_todo(id).await {
+            Ok(()) => Ok(Status::Ok),
+            Err(error) => {
+                println!("{:?}", error);
+                Err(Status::InternalServerError)
+            }
+        },
+        Err(error) => {
+            println!("{}", error);
+            Err(Status::NotFound)
+        }
+    }
+}
+
+/*#[get("/todo")]
+pub async fn get_all_todos(database: &State<database::MongoDB>) -> Result<T, Status> {
+    let temp = database.get_todos()
+    return match database.get_todos() {
+        Ok() => {
+
+        },
+        Err(error) => {
+            println!("{}", error);
+            Err(Status::NotFound)
+        }
+    }
+}*/
 
 /*
 #[put("/todo/<id>", data = "<task>", format = "json")]
@@ -61,18 +93,7 @@ async fn delete_todo_item(_id: String) {
 }*/
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct TodoReq {
+pub struct TodoDBO {
     pub(crate) title: String,
-    pub(crate) description: String
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct TodoResGetId {
-    pub(crate) title: String,
-    pub(crate) description: String
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct TodoIdForGetItem {
-    pub(crate) id: ObjectId,
+    pub(crate) description: String,
 }

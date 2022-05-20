@@ -12,7 +12,10 @@ use routes::*;
 async fn rocket() -> _ {
     rocket::build()
         .attach(database::init().await)
-        .mount("/api/v1", routes![post_new_todo, get_one_todo])
+        .mount(
+            "/api/v1",
+            routes![post_new_todo, get_one_todo, delete_one_todo],
+        )
         .register(
             "/",
             catchers![
