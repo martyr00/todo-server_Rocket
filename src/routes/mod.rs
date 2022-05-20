@@ -5,6 +5,12 @@ use crate::database;
 use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TodoDBO {
+    pub(crate) title: String,
+    pub(crate) description: String,
+}
+
 #[post("/todo", data = "<form>", format = "json")]
 pub async fn post_new_todo(
     mut form: Option<Json<TodoDBO>>,
@@ -37,15 +43,16 @@ pub async fn get_one_todo(
             })),
             Err(error) => {
                 println!("{:?}", error);
-                Err(Status::InternalServerError)
+                Err(Status::NotFound)
             }
         },
         Err(error) => {
             println!("{}", error);
-            Err(Status::NotFound)
+            Err(Status::InternalServerError)
         }
     }
 }
+
 #[delete("/todo/<_id>")]
 pub async fn delete_one_todo(
     _id: String,
@@ -57,12 +64,12 @@ pub async fn delete_one_todo(
             Ok(()) => Ok(Status::Ok),
             Err(error) => {
                 println!("{:?}", error);
-                Err(Status::InternalServerError)
+                Err(Status::NotFound)
             }
         },
         Err(error) => {
             println!("{}", error);
-            Err(Status::NotFound)
+            Err(Status::InternalServerError)
         }
     }
 }
@@ -91,9 +98,3 @@ async fn put_todo_item(_id: String, _task: Option<Json<Todo>>) {
 async fn delete_todo_item(_id: String) {
 //todo PUT -> (delete)todo_item
 }*/
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct TodoDBO {
-    pub(crate) title: String,
-    pub(crate) description: String,
-}

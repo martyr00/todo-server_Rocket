@@ -36,11 +36,6 @@ impl MongoDB {
             .unwrap())
     }
 
-    /*    pub async fn get_todos(&self) -> mongodb::error::Result<Collection<Todo>> {
-        let collection = self.database.collection::<Todo>("todo");
-        Ok(collection.find(bson::doc! {}, None).await?.unwrap())
-    }*/
-
     pub async fn delete_todo(&self, id: ObjectId) -> mongodb::error::Result<()> {
         let collection = self.database.collection::<Todo>("todo");
         collection
@@ -48,6 +43,20 @@ impl MongoDB {
             .await?;
         Ok(())
     }
+
+    /*    pub async fn get_todos(&self) -> mongodb::error::Result<Collection<Todo>> {
+        let collection = self.database.collection::<Todo>("todo");
+        Ok(collection.find(bson::doc! {}, None).await?.unwrap())
+    }
+
+    pub async fn update_blog(&self, id:ObjectId, todo: TodoDBO) -> mongodb::error::Result<Todo> {
+        let collection = self.database.collection::<Todo>("todo");
+        Ok(collection
+            .replace_one(bson::doc! { "_id": id }, todo, None)
+            .await?
+            .unwrap())
+    }
+    */
 }
 
 pub async fn init() -> AdHoc {
