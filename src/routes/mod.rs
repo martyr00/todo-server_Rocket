@@ -4,6 +4,7 @@ use rocket::State;
 use crate::database;
 use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
+use crate::model::Todo;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TodoDBO {
@@ -109,18 +110,17 @@ pub async fn patch_todo(
     }
 }
 
-/*pub async fn get_all_todos() -> Result<>
-*/
-/*#[get("/todo")]
-pub async fn get_all_todos(database: &State<database::MongoDB>) -> Result<T, Status> {
-    let temp = database.get_todos()
-    return match database.get_todos() {
-        Ok() => {
-
+#[get("/todo")]
+pub async fn get_all_todos(database: &State<database::MongoDB>) -> Result<Json<Vec<Todo>>, Status> {
+    return match database.get_all_todos().await {
+        Ok(vec_todo) => {
+            Ok(Json(vec_todo))
         },
-        Err(error) => {
-            println!("{}", error);
-            Err(Status::NotFound)
-        }
+        Err(error) =>{
+            println!("----------------");
+            println!("error: {:?}", error);
+            println!("----------------");
+            Err(Status::InternalServerError)
+        },
     }
-}*/
+}

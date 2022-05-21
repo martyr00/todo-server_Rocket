@@ -3,12 +3,8 @@ mod private;
 use crate::database::private::DB;
 use crate::model::Todo;
 use crate::TodoDBO;
-use mongodb::bson;
-use mongodb::bson::oid::ObjectId;
-use mongodb::options::ClientOptions;
-use mongodb::results::InsertOneResult;
-use mongodb::{Client, Database};
-use rocket::fairing::AdHoc;
+use mongodb::{bson, bson::oid::ObjectId, options::ClientOptions, results::InsertOneResult, Client, Cursor, Database};
+use rocket::{fairing::AdHoc, futures::TryStreamExt};
 
 pub struct MongoDB {
     database: Database,
@@ -18,14 +14,27 @@ impl MongoDB {
     fn new(database: Database) -> Self {
         MongoDB { database }
     }
+
     pub async fn add_todo(&self, todo: &mut TodoDBO) -> mongodb::error::Result<String> {
-        let temp = Todo {
+        let collection = self.database.collection::<Todo>("todo");
+        let insert: InsertOneResult = collection.insert_one(Todo {
             title: todo.title.clone(),
             description: todo.description.clone(),
-        };
-        let collection = self.database.collection::<Todo>("todo");
-        let insert: InsertOneResult = collection.insert_one(temp, None).await?;
+        }, None).await?;
         Ok(insert.inserted_id.to_string())
+    }
+
+    pub async fn get_all_todos(&self) -> mongodb::error::Result<Vec<Todo>> {
+        let collection = self.database.collection::<Todo>("todo");
+
+        let mut cursor: Cursor<Todo> = collection.find(None, None).await?;
+
+        let mut todo: Vec<Todo> = Vec::new();
+        while let Some(todo_item) = cursor.try_next().await? {
+            todo.push(todo_item);
+        }
+
+        Ok(todo)
     }
 
     pub async fn get_one_todo(&self, id: ObjectId) -> mongodb::error::Result<Option<Todo>> {
@@ -33,7 +42,7 @@ impl MongoDB {
         Ok(collection
             .find_one(bson::doc! { "_id": id }, None)
             .await?
-            )
+        )
     }
 
     pub async fn delete_todo(&self, id: ObjectId) -> mongodb::error::Result<()> {
