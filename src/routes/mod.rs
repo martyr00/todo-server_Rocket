@@ -34,8 +34,7 @@ pub async fn get_one_todo(
     _id: String,
     database: &State<database::MongoDB>,
 ) -> Result<Json<TodoDBO>, Status> {
-    let oid = ObjectId::parse_str(&_id);
-    match oid {
+    match ObjectId::parse_str(&_id) {
         Ok(id) => match database.get_one_todo(id).await {
             Ok(todo) => Ok(Json(TodoDBO {
                 title: todo.title,
@@ -58,8 +57,7 @@ pub async fn delete_one_todo(
     _id: String,
     database: &State<database::MongoDB>,
 ) -> Result<Status, Status> {
-    let oid = ObjectId::parse_str(&_id);
-    match oid {
+    match ObjectId::parse_str(&_id) {
         Ok(id) => match database.delete_todo(id).await {
             Ok(()) => Ok(Status::Ok),
             Err(error) => {
@@ -69,6 +67,37 @@ pub async fn delete_one_todo(
         },
         Err(error) => {
             println!("{}", error);
+            Err(Status::InternalServerError)
+        }
+    }
+}
+
+#[patch("/todo/<_id>", data = "<form>", format = "json")]
+pub async fn patch_todo(
+    _id: String,
+    database: &State<database::MongoDB>,
+    mut form: Option<Json<TodoDBO>>,
+) -> Result<Json<String>, Status> {
+    match ObjectId::parse_str(&_id) {
+        Ok(id) => match form {
+            Some(ref mut form) => {
+                if !form.title.is_empty() && !form.description.is_empty() {
+                    return match database.update_todo(id, form).await.ok() {
+                        Some(ok) => Ok(Json(ok)),
+                        None => Err(Status::InternalServerError),
+                    };
+                } else {
+                    Err(Status::BadRequest)
+                }
+            }
+            None => Err(Status::InternalServerError),
+        },
+        Err(error) => {
+            println!("----------------");
+            println!("error: {:?}", error);
+            println!("_id: {:?}", _id);
+            println!("form: {:?}", form);
+            println!("----------------");
             Err(Status::InternalServerError)
         }
     }

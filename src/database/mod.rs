@@ -44,6 +44,27 @@ impl MongoDB {
         Ok(())
     }
 
+    pub async fn update_todo(
+        &self,
+        id: ObjectId,
+        tododbo: &mut TodoDBO,
+    ) -> mongodb::error::Result<String> {
+        let collection = self.database.collection::<Todo>("todo");
+        dbg!(
+            collection
+                .find_one_and_replace(
+                    bson::doc! { "_id": id },
+                    Todo {
+                        title: tododbo.title.clone(),
+                        description: tododbo.description.clone()
+                    },
+                    None
+                )
+                .await?
+        );
+        Ok("ok".to_string())
+    }
+
     /*    pub async fn get_todos(&self) -> mongodb::error::Result<Collection<Todo>> {
         let collection = self.database.collection::<Todo>("todo");
         Ok(collection.find(bson::doc! {}, None).await?.unwrap())
