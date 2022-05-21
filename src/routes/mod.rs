@@ -2,9 +2,9 @@ use mongodb::bson::oid::ObjectId;
 use rocket::State;
 
 use crate::database;
+use crate::model::Todo;
 use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
-use crate::model::Todo;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TodoDBO {
@@ -38,15 +38,14 @@ pub async fn get_one_todo(
     match ObjectId::parse_str(&_id) {
         Ok(id) => match database.get_one_todo(id).await {
             Ok(option_todo) => {
-            return match option_todo {
-                Some(todo)=> {
-                    Ok(Json(TodoDBO {
+                return match option_todo {
+                    Some(todo) => Ok(Json(TodoDBO {
                         title: todo.title,
                         description: todo.description,
-                    }))
+                    })),
+                    None => Err(Status::NotFound),
                 }
-                None => Err(Status::NotFound)
-            }},
+            }
             Err(error) => {
                 println!("{:?}", error);
                 Err(Status::NotFound)
@@ -113,14 +112,12 @@ pub async fn patch_todo(
 #[get("/todo")]
 pub async fn get_all_todos(database: &State<database::MongoDB>) -> Result<Json<Vec<Todo>>, Status> {
     return match database.get_all_todos().await {
-        Ok(vec_todo) => {
-            Ok(Json(vec_todo))
-        },
-        Err(error) =>{
+        Ok(vec_todo) => Ok(Json(vec_todo)),
+        Err(error) => {
             println!("----------------");
             println!("error: {:?}", error);
             println!("----------------");
             Err(Status::InternalServerError)
-        },
-    }
+        }
+    };
 }

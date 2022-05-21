@@ -3,7 +3,10 @@ mod private;
 use crate::database::private::DB;
 use crate::model::Todo;
 use crate::TodoDBO;
-use mongodb::{bson, bson::oid::ObjectId, options::ClientOptions, results::InsertOneResult, Client, Cursor, Database};
+use mongodb::{
+    bson, bson::oid::ObjectId, options::ClientOptions, results::InsertOneResult, Client, Cursor,
+    Database,
+};
 use rocket::{fairing::AdHoc, futures::TryStreamExt};
 
 pub struct MongoDB {
@@ -17,10 +20,15 @@ impl MongoDB {
 
     pub async fn add_todo(&self, todo: &mut TodoDBO) -> mongodb::error::Result<String> {
         let collection = self.database.collection::<Todo>("todo");
-        let insert: InsertOneResult = collection.insert_one(Todo {
-            title: todo.title.clone(),
-            description: todo.description.clone(),
-        }, None).await?;
+        let insert: InsertOneResult = collection
+            .insert_one(
+                Todo {
+                    title: todo.title.clone(),
+                    description: todo.description.clone(),
+                },
+                None,
+            )
+            .await?;
         Ok(insert.inserted_id.to_string())
     }
 
@@ -39,10 +47,7 @@ impl MongoDB {
 
     pub async fn get_one_todo(&self, id: ObjectId) -> mongodb::error::Result<Option<Todo>> {
         let collection = self.database.collection::<Todo>("todo");
-        Ok(collection
-            .find_one(bson::doc! { "_id": id }, None)
-            .await?
-        )
+        Ok(collection.find_one(bson::doc! { "_id": id }, None).await?)
     }
 
     pub async fn delete_todo(&self, id: ObjectId) -> mongodb::error::Result<()> {

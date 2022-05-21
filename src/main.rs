@@ -14,7 +14,13 @@ async fn rocket() -> _ {
         .attach(database::init().await)
         .mount(
             "/api/v1",
-            routes![post_new_todo, get_one_todo, delete_one_todo, patch_todo, get_all_todos],
+            routes![
+                post_new_todo,
+                get_one_todo,
+                delete_one_todo,
+                patch_todo,
+                get_all_todos
+            ],
         )
         .register(
             "/",
