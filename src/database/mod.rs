@@ -28,12 +28,12 @@ impl MongoDB {
         Ok(insert.inserted_id.to_string())
     }
 
-    pub async fn get_one_todo(&self, id: ObjectId) -> mongodb::error::Result<Todo> {
+    pub async fn get_one_todo(&self, id: ObjectId) -> mongodb::error::Result<Option<Todo>> {
         let collection = self.database.collection::<Todo>("todo");
         Ok(collection
             .find_one(bson::doc! { "_id": id }, None)
             .await?
-            .unwrap())
+            )
     }
 
     pub async fn delete_todo(&self, id: ObjectId) -> mongodb::error::Result<()> {

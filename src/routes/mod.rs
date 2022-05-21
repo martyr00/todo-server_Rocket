@@ -36,10 +36,16 @@ pub async fn get_one_todo(
 ) -> Result<Json<TodoDBO>, Status> {
     match ObjectId::parse_str(&_id) {
         Ok(id) => match database.get_one_todo(id).await {
-            Ok(todo) => Ok(Json(TodoDBO {
-                title: todo.title,
-                description: todo.description,
-            })),
+            Ok(option_todo) => {
+            return match option_todo {
+                Some(todo)=> {
+                    Ok(Json(TodoDBO {
+                        title: todo.title,
+                        description: todo.description,
+                    }))
+                }
+                None => Err(Status::NotFound)
+            }},
             Err(error) => {
                 println!("{:?}", error);
                 Err(Status::NotFound)
@@ -103,6 +109,8 @@ pub async fn patch_todo(
     }
 }
 
+/*pub async fn get_all_todos() -> Result<>
+*/
 /*#[get("/todo")]
 pub async fn get_all_todos(database: &State<database::MongoDB>) -> Result<T, Status> {
     let temp = database.get_todos()
@@ -115,15 +123,4 @@ pub async fn get_all_todos(database: &State<database::MongoDB>) -> Result<T, Sta
             Err(Status::NotFound)
         }
     }
-}*/
-
-/*
-#[put("/todo/<id>", data = "<task>", format = "json")]
-async fn put_todo_item(_id: String, _task: Option<Json<Todo>>) {
-    //todo PUT -> (EDIT)todo_item
-}
-
-#[delete("/todo/<id>", format = "json")]
-async fn delete_todo_item(_id: String) {
-//todo PUT -> (delete)todo_item
 }*/
