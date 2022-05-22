@@ -4,6 +4,7 @@ use rocket::State;
 use crate::database;
 use crate::model::TodoGET;
 use rocket::{http::Status, serde::json::Json};
+use rocket::form::validate::Len;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -19,7 +20,7 @@ pub async fn post_new_todo(
 ) -> Result<Status, Status> {
     return match form {
         Some(ref mut form) => {
-            if !form.title.is_empty() && !form.description.is_empty() {
+            if get_is_valid_todo(form) {
                 database.add_todo(form).await.ok();
                 Ok(Status::Ok)
             } else {
@@ -87,7 +88,7 @@ pub async fn patch_todo(
     match ObjectId::parse_str(&_id) {
         Ok(id) => match form {
             Some(ref mut form) => {
-                if !form.title.is_empty() && !form.description.is_empty() {
+                if get_is_valid_todo(form) {
                     return match database.update_todo(id, form).await.ok() {
                         Some(ok) => Ok(Json(ok)),
                         None => Err(Status::InternalServerError),
@@ -123,3 +124,15 @@ pub async fn get_all_todos(
         }
     };
 }
+
+fn get_is_valid_todo(todo: &TodoDBO) -> bool {
+    let title = &todo.title;
+    let description = &todo.description;
+
+    return if !title.is_empty() && !description.is_empty() {
+        if title.len() < 10 && description.len() < 20 {
+            true
+        } else { false }
+    } else { false }
+}
+//Utc::now()

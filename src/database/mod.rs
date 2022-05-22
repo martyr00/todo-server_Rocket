@@ -1,14 +1,13 @@
 mod private;
 
 use crate::database::private::DB;
-use crate::model::{Todo, TodoGET, TodoId};
+use crate::model::{Todo, TodoGET, TodoWithIdNotDesc};
 use crate::TodoDBO;
 use mongodb::{
-    bson, bson::oid::ObjectId, options::ClientOptions, results::InsertOneResult, Client, Cursor,
+    bson, bson::oid::ObjectId, options::ClientOptions, results::InsertOneResult, Client,
     Database,
 };
 use rocket::{fairing::AdHoc, futures::TryStreamExt};
-use rocket_db_pools::sqlx::encode::IsNull::No;
 
 pub struct MongoDB {
     database: Database,
@@ -26,6 +25,7 @@ impl MongoDB {
                 Todo {
                     title: todo.title.clone(),
                     description: todo.description.clone(),
+                    //time:
                 },
                 None,
             )
@@ -34,7 +34,7 @@ impl MongoDB {
     }
 
     pub async fn get_all_todos(&self) -> mongodb::error::Result<Vec<TodoGET>> {
-        let collection = self.database.collection::<TodoId>("todo");
+        let collection = self.database.collection::<TodoWithIdNotDesc>("todo");
 
         let mut cursor = collection.find(None, None).await?;
 
@@ -42,12 +42,11 @@ impl MongoDB {
         while let Some(result) = cursor.try_next().await? {
             let _id = result._id;
             let title = result.title;
-            let description = result.description;
-            // transform ObjectId to String
+
             let customer_json = TodoGET {
                 _id: _id.to_string(),
                 title: title.to_string(),
-                description: description.to_string(),
+                //description: description.to_string(),
             };
             todos.push(customer_json);
         }
@@ -88,20 +87,6 @@ impl MongoDB {
         );
         Ok("ok".to_string())
     }
-
-    /*    pub async fn get_todos(&self) -> mongodb::error::Result<Collection<Todo>> {
-        let collection = self.database.collection::<Todo>("todo");
-        Ok(collection.find(bson::doc! {}, None).await?.unwrap())
-    }
-
-    pub async fn update_blog(&self, id:ObjectId, todo: TodoDBO) -> mongodb::error::Result<Todo> {
-        let collection = self.database.collection::<Todo>("todo");
-        Ok(collection
-            .replace_one(bson::doc! { "_id": id }, todo, None)
-            .await?
-            .unwrap())
-    }
-    */
 }
 
 pub async fn init() -> AdHoc {
