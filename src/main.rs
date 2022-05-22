@@ -15,11 +15,11 @@ async fn rocket() -> _ {
         .mount(
             "/api/v1",
             routes![
-                post_new_todo,
-                get_one_todo,
-                delete_one_todo,
-                patch_todo,
-                get_all_todos
+                post_new_item,
+                get_one_item,
+                delete_one_item,
+                patch_item,
+                get_all_item
             ],
         )
         .register(

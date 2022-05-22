@@ -18,7 +18,7 @@ impl MongoDB {
         MongoDB { database }
     }
 
-    pub async fn add_todo(&self, todo: &mut TodoDBO) -> mongodb::error::Result<String> {
+    pub async fn add_item(&self, todo: &mut TodoDBO) -> mongodb::error::Result<String> {
         let collection = self.database.collection::<Todo>("todo");
         let insert: InsertOneResult = collection
             .insert_one(
@@ -33,7 +33,7 @@ impl MongoDB {
         Ok(insert.inserted_id.to_string())
     }
 
-    pub async fn get_all_todos(&self) -> mongodb::error::Result<Vec<TodoGET>> {
+    pub async fn get_all_items(&self) -> mongodb::error::Result<Vec<TodoGET>> {
         let collection = self.database.collection::<TodoWithIdNotDesc>("todo");
 
         let mut cursor = collection.find(None, None).await?;
@@ -55,12 +55,12 @@ impl MongoDB {
         Ok(todos)
     }
 
-    pub async fn get_one_todo(&self, id: ObjectId) -> mongodb::error::Result<Option<Todo>> {
+    pub async fn get_one_item(&self, id: ObjectId) -> mongodb::error::Result<Option<Todo>> {
         let collection = self.database.collection::<Todo>("todo");
         Ok(collection.find_one(bson::doc! { "_id": id }, None).await?)
     }
 
-    pub async fn delete_todo(&self, id: ObjectId) -> mongodb::error::Result<()> {
+    pub async fn delete_item(&self, id: ObjectId) -> mongodb::error::Result<()> {
         let collection = self.database.collection::<Todo>("todo");
         collection
             .delete_one(bson::doc! { "_id": id }, None)
@@ -68,7 +68,7 @@ impl MongoDB {
         Ok(())
     }
 
-    pub async fn update_todo(
+    pub async fn update_item(
         &self,
         id: ObjectId,
         tododbo: &mut TodoDBO,

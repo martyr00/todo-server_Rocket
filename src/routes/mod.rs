@@ -20,14 +20,14 @@ pub struct TodoDBOWithTime {
 }
 
 #[post("/todo", data = "<form>", format = "json")]
-pub async fn post_new_todo(
+pub async fn post_new_item(
     mut form: Option<Json<TodoDBO>>,
     database: &State<database::MongoDB>,
 ) -> Result<Status, Status> {
     return match form {
         Some(ref mut form) => {
-            if get_is_valid_todo(form) {
-                database.add_todo(form).await.ok();
+            if get_is_valid_item(form) {
+                database.add_item(form).await.ok();
                 Ok(Status::Ok)
             } else {
                 Err(Status::BadRequest)
@@ -38,12 +38,12 @@ pub async fn post_new_todo(
 }
 
 #[get("/todo/<_id>")]
-pub async fn get_one_todo(
+pub async fn get_one_item(
     _id: String,
     database: &State<database::MongoDB>,
 ) -> Result<Json<TodoDBOWithTime>, Status> {
     match ObjectId::parse_str(&_id) {
-        Ok(id) => match database.get_one_todo(id).await {
+        Ok(id) => match database.get_one_item(id).await {
             Ok(option_todo) => {
                 return match option_todo {
                     Some(todo) => Ok(Json(TodoDBOWithTime {
@@ -67,12 +67,12 @@ pub async fn get_one_todo(
 }
 
 #[delete("/todo/<_id>")]
-pub async fn delete_one_todo(
+pub async fn delete_one_item(
     _id: String,
     database: &State<database::MongoDB>,
 ) -> Result<Status, Status> {
     match ObjectId::parse_str(&_id) {
-        Ok(id) => match database.delete_todo(id).await {
+        Ok(id) => match database.delete_item(id).await {
             Ok(()) => Ok(Status::Ok),
             Err(error) => {
                 println!("{:?}", error);
@@ -87,7 +87,7 @@ pub async fn delete_one_todo(
 }
 
 #[patch("/todo/<_id>", data = "<form>", format = "json")]
-pub async fn patch_todo(
+pub async fn patch_item(
     _id: String,
     database: &State<database::MongoDB>,
     mut form: Option<Json<TodoDBO>>,
@@ -95,8 +95,8 @@ pub async fn patch_todo(
     match ObjectId::parse_str(&_id) {
         Ok(id) => match form {
             Some(ref mut form) => {
-                if get_is_valid_todo(form) {
-                    return match database.update_todo(id, form).await.ok() {
+                if get_is_valid_item(form) {
+                    return match database.update_item(id, form).await.ok() {
                         Some(ok) => Ok(Json(ok)),
                         None => Err(Status::InternalServerError),
                     };
@@ -118,10 +118,10 @@ pub async fn patch_todo(
 }
 
 #[get("/todo")]
-pub async fn get_all_todos(
+pub async fn get_all_item(
     database: &State<database::MongoDB>,
 ) -> Result<Json<Vec<TodoGET>>, Status> {
-    return match database.get_all_todos().await {
+    return match database.get_all_items().await {
         Ok(vec_todo) => Ok(Json(vec_todo)),
         Err(error) => {
             println!("----------------");
@@ -132,7 +132,7 @@ pub async fn get_all_todos(
     };
 }
 
-fn get_is_valid_todo(todo: &TodoDBO) -> bool {
+fn get_is_valid_item(todo: &TodoDBO) -> bool {
     let title = &todo.title;
     let description = &todo.description;
 
