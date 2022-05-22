@@ -4,13 +4,19 @@ use rocket::State;
 use crate::database;
 use crate::model::TodoGET;
 use rocket::{http::Status, serde::json::Json};
-use rocket::form::validate::Len;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TodoDBO {
     pub(crate) title: String,
     pub(crate) description: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TodoDBOWithTime {
+    pub(crate) title: String,
+    pub(crate) description: String,
+    pub(crate) time: String,
 }
 
 #[post("/todo", data = "<form>", format = "json")]
@@ -35,14 +41,15 @@ pub async fn post_new_todo(
 pub async fn get_one_todo(
     _id: String,
     database: &State<database::MongoDB>,
-) -> Result<Json<TodoDBO>, Status> {
+) -> Result<Json<TodoDBOWithTime>, Status> {
     match ObjectId::parse_str(&_id) {
         Ok(id) => match database.get_one_todo(id).await {
             Ok(option_todo) => {
                 return match option_todo {
-                    Some(todo) => Ok(Json(TodoDBO {
+                    Some(todo) => Ok(Json(TodoDBOWithTime {
                         title: todo.title,
                         description: todo.description,
+                        time: todo.time
                     })),
                     None => Err(Status::NotFound),
                 }
@@ -135,4 +142,3 @@ fn get_is_valid_todo(todo: &TodoDBO) -> bool {
         } else { false }
     } else { false }
 }
-//Utc::now()

@@ -1,5 +1,6 @@
 mod private;
 
+use chrono::Utc;
 use crate::database::private::DB;
 use crate::model::{Todo, TodoGET, TodoWithIdNotDesc};
 use crate::TodoDBO;
@@ -25,7 +26,7 @@ impl MongoDB {
                 Todo {
                     title: todo.title.clone(),
                     description: todo.description.clone(),
-                    //time:
+                    time: Utc::now().time().to_string()
                 },
                 None,
             )
@@ -42,11 +43,12 @@ impl MongoDB {
         while let Some(result) = cursor.try_next().await? {
             let _id = result._id;
             let title = result.title;
+            let time = result.time;
 
             let customer_json = TodoGET {
                 _id: _id.to_string(),
                 title: title.to_string(),
-                //description: description.to_string(),
+                time,
             };
             todos.push(customer_json);
         }
@@ -79,7 +81,8 @@ impl MongoDB {
                     bson::doc! { "_id": id },
                     Todo {
                         title: tododbo.title.clone(),
-                        description: tododbo.description.clone()
+                        description: tododbo.description.clone(),
+                        time: Utc::now().time().to_string()
                     },
                     None
                 )
