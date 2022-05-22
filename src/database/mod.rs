@@ -1,12 +1,11 @@
 mod private;
 
-use chrono::Utc;
 use crate::database::private::DB;
 use crate::model::{Todo, TodoGET, TodoWithIdNotDesc};
 use crate::TodoDBO;
+use chrono::Utc;
 use mongodb::{
-    bson, bson::oid::ObjectId, options::ClientOptions, results::InsertOneResult, Client,
-    Database,
+    bson, bson::oid::ObjectId, options::ClientOptions, results::InsertOneResult, Client, Database,
 };
 use rocket::{fairing::AdHoc, futures::TryStreamExt};
 
@@ -26,7 +25,7 @@ impl MongoDB {
                 Todo {
                     title: todo.title.clone(),
                     description: todo.description.clone(),
-                    time: Utc::now().time().to_string()
+                    time: Utc::now().time().to_string(),
                 },
                 None,
             )

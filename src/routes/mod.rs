@@ -49,7 +49,7 @@ pub async fn get_one_todo(
                     Some(todo) => Ok(Json(TodoDBOWithTime {
                         title: todo.title,
                         description: todo.description,
-                        time: todo.time
+                        time: todo.time,
                     })),
                     None => Err(Status::NotFound),
                 }
@@ -139,6 +139,10 @@ fn get_is_valid_todo(todo: &TodoDBO) -> bool {
     return if !title.is_empty() && !description.is_empty() {
         if title.len() < 10 && description.len() < 20 {
             true
-        } else { false }
-    } else { false }
+        } else {
+            false
+        }
+    } else {
+        false
+    };
 }
