@@ -1,13 +1,14 @@
 mod private;
 
 use crate::database::private::DB;
-use crate::model::Todo;
+use crate::model::{Todo, TodoGET, TodoId};
 use crate::TodoDBO;
 use mongodb::{
     bson, bson::oid::ObjectId, options::ClientOptions, results::InsertOneResult, Client, Cursor,
     Database,
 };
 use rocket::{fairing::AdHoc, futures::TryStreamExt};
+use rocket_db_pools::sqlx::encode::IsNull::No;
 
 pub struct MongoDB {
     database: Database,
@@ -32,17 +33,26 @@ impl MongoDB {
         Ok(insert.inserted_id.to_string())
     }
 
-    pub async fn get_all_todos(&self) -> mongodb::error::Result<Vec<Todo>> {
-        let collection = self.database.collection::<Todo>("todo");
+    pub async fn get_all_todos(&self) -> mongodb::error::Result<Vec<TodoGET>> {
+        let collection = self.database.collection::<TodoId>("todo");
 
-        let mut cursor: Cursor<Todo> = collection.find(None, None).await?;
+        let mut cursor = collection.find(None, None).await?;
 
-        let mut todo: Vec<Todo> = Vec::new();
-        while let Some(todo_item) = cursor.try_next().await? {
-            todo.push(todo_item);
+        let mut todos: Vec<TodoGET> = vec![];
+        while let Some(result) = cursor.try_next().await? {
+            let _id = result._id;
+            let title = result.title;
+            let description = result.description;
+            // transform ObjectId to String
+            let customer_json = TodoGET {
+                _id: _id.to_string(),
+                title: title.to_string(),
+                description: description.to_string(),
+            };
+            todos.push(customer_json);
         }
 
-        Ok(todo)
+        Ok(todos)
     }
 
     pub async fn get_one_todo(&self, id: ObjectId) -> mongodb::error::Result<Option<Todo>> {

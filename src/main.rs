@@ -1,6 +1,6 @@
 #[macro_use]
 extern crate rocket;
-
+// todo! GET ALL WITH ID
 mod database;
 mod model;
 mod routes;

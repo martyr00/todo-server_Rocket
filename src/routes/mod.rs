@@ -2,7 +2,7 @@ use mongodb::bson::oid::ObjectId;
 use rocket::State;
 
 use crate::database;
-use crate::model::Todo;
+use crate::model::TodoGET;
 use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
 
@@ -110,7 +110,9 @@ pub async fn patch_todo(
 }
 
 #[get("/todo")]
-pub async fn get_all_todos(database: &State<database::MongoDB>) -> Result<Json<Vec<Todo>>, Status> {
+pub async fn get_all_todos(
+    database: &State<database::MongoDB>,
+) -> Result<Json<Vec<TodoGET>>, Status> {
     return match database.get_all_todos().await {
         Ok(vec_todo) => Ok(Json(vec_todo)),
         Err(error) => {
