@@ -3,7 +3,7 @@ mod private;
 use crate::database::private::DB;
 use crate::model::{Todo, TodoGET, TodoWithIdNotDesc};
 use crate::TodoDBO;
-use chrono::Utc;
+use chrono::{NaiveTime, Utc};
 use mongodb::{
     bson, bson::oid::ObjectId, options::ClientOptions, results::InsertOneResult, Client, Database,
 };
@@ -20,12 +20,13 @@ impl MongoDB {
 
     pub async fn add_item(&self, todo: &mut TodoDBO) -> mongodb::error::Result<String> {
         let collection = self.database.collection::<Todo>("todo");
+        let time:NaiveTime = Utc::now().time();
         let insert: InsertOneResult = collection
             .insert_one(
                 Todo {
                     title: todo.title.clone(),
                     description: todo.description.clone(),
-                    time: Utc::now().time().to_string(),
+                    time: time.to_string(),
                 },
                 None,
             )
